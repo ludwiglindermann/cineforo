@@ -1,0 +1,25 @@
+# ===== Credenciales y Wallet de Oracle: NUNCA subirlos a Git =====
+db-local.properties
+wallet/
+Wallet_*/
+Wallet_*.zip
+*.sso
+*.p12
+*.jks
+
+# ===== Maven =====
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# ===== IDEs =====
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+# ===== Sistema =====
+.DS_Store
+Thumbs.db

@@ -1,0 +1,15 @@
+# =====================================================================
+# Copia este archivo como "db-local.properties" (en esta misma carpeta,
+# la raiz "cineforo") y completa tus datos. Lo usan los DOS microservicios.
+# db-local.properties esta en .gitignore: tu clave NO se sube a GitHub.
+# =====================================================================
+
+# Servicio del Wallet (aparece al conectar en SQL Developer)
+DB_TNS_NAME=foros_tp
+
+# Ruta COMPLETA a la carpeta del Wallet DESCOMPRIMIDO, con barras /
+# Ejemplo: C:/Users/tu_usuario/Documents/Duoc/cineforo/wallet
+DB_WALLET_PATH=C:/ruta/completa/a/cineforo/wallet
+
+# Clave de los usuarios USUARIOS_MS y FORO_MS
+DB_PASSWORD=tu_clave_aqui
