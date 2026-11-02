@@ -1,0 +1,1181 @@
+{
+  "info": {
+    "name": "CineForo - Microservicios (DSY2205)",
+    "description": "Pruebas de los microservicios de Usuarios (puerto 8081) y Foro (puerto 8082).\n\nUsuarios de ejemplo (clave Cine2026!): 1 admin_cineforo (ADMINISTRADOR), 2 ana_moderadora (MODERADOR), 3 juan_cinefilo, 4 maria_series, 5 pedro_anime, 6 camila_resenas (USUARIO).\n\nEl header X-Usuario-Id indica que usuario realiza la accion.\nEjecuta las carpetas en orden: los POST guardan el ID creado para los PUT y DELETE siguientes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "usuariosUrl",
+      "value": "http://localhost:8081/api"
+    },
+    {
+      "key": "foroUrl",
+      "value": "http://localhost:8082/api"
+    },
+    {
+      "key": "adminId",
+      "value": "1"
+    },
+    {
+      "key": "moderadoraId",
+      "value": "2"
+    },
+    {
+      "key": "juanId",
+      "value": "3"
+    },
+    {
+      "key": "mariaId",
+      "value": "4"
+    },
+    {
+      "key": "nuevoUsuarioId",
+      "value": ""
+    },
+    {
+      "key": "nuevoRolId",
+      "value": ""
+    },
+    {
+      "key": "nuevaCategoriaId",
+      "value": ""
+    },
+    {
+      "key": "nuevoTemaId",
+      "value": ""
+    },
+    {
+      "key": "nuevoComentarioId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Usuarios - Inicio de sesion",
+      "item": [
+        {
+          "name": "Login correcto (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usuariosUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"admin_cineforo\",\n  \"password\": \"Cine2026!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login con email (juan)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usuariosUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"juan@cineforo.cl\",\n  \"password\": \"Cine2026!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login con clave incorrecta (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usuariosUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"juan_cinefilo\",\n  \"password\": \"otraClave123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Usuarios - Roles",
+      "item": [
+        {
+          "name": "GET - Listar roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{usuariosUrl}}/roles"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Obtener rol por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{usuariosUrl}}/roles/1"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST - Crear rol (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{adminId}}"
+              }
+            ],
+            "url": "{{usuariosUrl}}/roles",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"CRITICO\",\n  \"descripcion\": \"Usuario verificado que publica resenas destacadas\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('nuevoRolId', pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT - Actualizar rol (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{adminId}}"
+              }
+            ],
+            "url": "{{usuariosUrl}}/roles/{{nuevoRolId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"CRITICO\",\n  \"descripcion\": \"Critico de cine verificado por la administracion\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE - Eliminar rol (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{adminId}}"
+              }
+            ],
+            "url": "{{usuariosUrl}}/roles/{{nuevoRolId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Usuarios - CRUD",
+      "item": [
+        {
+          "name": "GET - Listar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{usuariosUrl}}/usuarios"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Filtrar por rol",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{usuariosUrl}}/usuarios?rol=USUARIO"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Obtener usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{usuariosUrl}}/usuarios/3"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST - Registrar usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usuariosUrl}}/usuarios",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"sofia_terror\",\n  \"email\": \"sofia@cineforo.cl\",\n  \"password\": \"Peliculas2026\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('nuevoUsuarioId', pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT - El usuario edita su email",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{nuevoUsuarioId}}"
+              }
+            ],
+            "url": "{{usuariosUrl}}/usuarios/{{nuevoUsuarioId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sofia.terror@cineforo.cl\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT - Admin lo asciende a MODERADOR",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{adminId}}"
+              }
+            ],
+            "url": "{{usuariosUrl}}/usuarios/{{nuevoUsuarioId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rolId\": 2\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE - Admin elimina el usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{adminId}}"
+              }
+            ],
+            "url": "{{usuariosUrl}}/usuarios/{{nuevoUsuarioId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Foro - Categorias",
+      "item": [
+        {
+          "name": "GET - Listar categorias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/categorias"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Obtener categoria por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/categorias/2"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST - Crear categoria (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{adminId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/categorias",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Documentales\",\n  \"descripcion\": \"Documentales de cine, naturaleza e historia\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('nuevaCategoriaId', pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT - Actualizar categoria (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{adminId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/categorias/{{nuevaCategoriaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Documentales\",\n  \"descripcion\": \"Documentales y docuseries de todas las plataformas\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE - Eliminar categoria (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{adminId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/categorias/{{nuevaCategoriaId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Foro - Temas",
+      "item": [
+        {
+          "name": "GET - Listar todos los temas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/temas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Buscar por categoria",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/temas?categoriaId=4"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Buscar por texto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/temas?q=oppenheimer"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Temas de un autor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/temas?autorId=3"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Ver tema con comentarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/temas/2"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST - Publicar tema (juan)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{juanId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/temas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Reseña: Volver al Futuro sigue siendo perfecta\",\n  \"contenido\": \"La volví a ver este fin de semana y el guion funciona como un reloj. Nota: 10/10.\",\n  \"categoriaId\": 4\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('nuevoTemaId', pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT - El autor edita su tema",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{juanId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/temas/{{nuevoTemaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Reseña: Volver al Futuro (1985) sigue siendo perfecta\",\n  \"contenido\": \"La volví a ver este fin de semana: el guion funciona como un reloj y la música de Alan Silvestri es inolvidable. Nota: 10/10.\",\n  \"categoriaId\": 4\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Foro - Comentarios",
+      "item": [
+        {
+          "name": "GET - Comentarios de un tema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/temas/2/comentarios"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST - Comentar (maria)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{mariaId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/temas/{{nuevoTemaId}}/comentarios",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"Totalmente de acuerdo, es de mis favoritas.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('nuevoComentarioId', pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Obtener comentario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/comentarios/{{nuevoComentarioId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT - La autora edita su comentario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{mariaId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/comentarios/{{nuevoComentarioId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"Totalmente de acuerdo, es de mis favoritas. ¡La trilogía completa vale la pena!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE - Moderadora elimina el comentario",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{moderadoraId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/comentarios/{{nuevoComentarioId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE - El autor elimina su tema",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{juanId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/temas/{{nuevoTemaId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Permisos por rol y errores",
+      "item": [
+        {
+          "name": "403 - Usuario intenta crear categoria",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{juanId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/categorias",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Terror\",\n  \"descripcion\": \"Peliculas de terror\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - Usuario edita tema ajeno",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{juanId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/temas/3",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Tema modificado por otro\",\n  \"contenido\": \"No deberia poder\",\n  \"categoriaId\": 2\n}"
+            },
+            "description": "El tema 3 es de maria_series"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - Usuario intenta eliminar a otro",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{juanId}}"
+              }
+            ],
+            "url": "{{usuariosUrl}}/usuarios/4"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - Usuario se intenta dar rol admin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{juanId}}"
+              }
+            ],
+            "url": "{{usuariosUrl}}/usuarios/3",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rolId\": 3\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "401 - Publicar sin X-Usuario-Id",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{foroUrl}}/temas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Tema sin autor\",\n  \"contenido\": \"No deberia publicarse\",\n  \"categoriaId\": 1\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "400 - Datos invalidos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usuariosUrl}}/usuarios",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"a\",\n  \"email\": \"no-es-email\",\n  \"password\": \"123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "409 - Usuario duplicado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usuariosUrl}}/usuarios",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"juan_cinefilo\",\n  \"email\": \"otro@cineforo.cl\",\n  \"password\": \"Peliculas2026\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "409 - Eliminar categoria con temas",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{adminId}}"
+              }
+            ],
+            "url": "{{foroUrl}}/categorias/1"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "404 - Tema baneado no visible",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/temas/10",
+            "description": "El tema 10 fue baneado por incumplir las normas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "404 - Usuario inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{usuariosUrl}}/usuarios/9999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
