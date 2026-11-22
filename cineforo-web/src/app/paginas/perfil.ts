@@ -122,22 +122,22 @@ export class Perfil {
     confirmar: ['', Validators.required],
   }, { validators: camposIguales('nueva', 'confirmar') });
 
-  guardarPerfil(): void {
+  async guardarPerfil(): Promise<void> {
     this.formPerfil.markAllAsTouched();
     if (this.formPerfil.invalid) {
       return;
     }
-    const r = this.foro.actualizarPerfil(this.formPerfil.getRawValue());
+    const r = await this.foro.actualizarPerfil(this.formPerfil.getRawValue());
     this.okPerfil.set(r.ok);
     this.msgPerfil.set(r.mensaje);
   }
 
-  cambiarPassword(): void {
+  async cambiarPassword(): Promise<void> {
     this.formPass.markAllAsTouched();
     if (this.formPass.invalid) {
       return;
     }
-    const r = this.foro.cambiarPassword(this.formPass.controls.actual.value, this.formPass.controls.nueva.value);
+    const r = await this.foro.cambiarPassword(this.formPass.controls.actual.value, this.formPass.controls.nueva.value);
     this.okPass.set(r.ok);
     this.msgPass.set(r.mensaje);
     if (r.ok) {

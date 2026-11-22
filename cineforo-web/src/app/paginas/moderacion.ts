@@ -110,16 +110,19 @@ export class Moderacion {
   readonly mensaje = signal('');
   motivo = '';
 
-  banear(tipo: TipoContenido, id: number): void {
+  async banear(tipo: TipoContenido, id: number): Promise<void> {
     if (this.motivo.trim().length < 5) {
       this.mensaje.set('Escribe un motivo de al menos 5 caracteres antes de banear.');
       return;
     }
-    this.mensaje.set(this.foro.banear(tipo, id, this.motivo).mensaje);
-    this.motivo = '';
+    const r = await this.foro.banear(tipo, id, this.motivo);
+    this.mensaje.set(r.mensaje);
+    if (r.ok) {
+      this.motivo = '';
+    }
   }
 
-  restaurar(tipo: TipoContenido, id: number): void {
-    this.mensaje.set(this.foro.restaurar(tipo, id).mensaje);
+  async restaurar(tipo: TipoContenido, id: number): Promise<void> {
+    this.mensaje.set((await this.foro.restaurar(tipo, id)).mensaje);
   }
 }

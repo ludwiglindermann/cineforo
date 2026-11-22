@@ -109,13 +109,13 @@ export class Registro {
 
   readonly c = this.form.controls;
 
-  enviar(): void {
+  async enviar(): Promise<void> {
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       return;
     }
     const v = this.form.getRawValue();
-    const r = this.foro.registrar(v);
+    const r = await this.foro.registrar(v);
     if (!r.ok) {
       this.error.set(r.mensaje);
       return;

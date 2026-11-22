@@ -120,11 +120,11 @@ export class Recuperar {
     }
   }
 
-  cambiar(): void {
+  async cambiar(): Promise<void> {
     this.formPassword.markAllAsTouched();
     if (this.formPassword.invalid) {
       return;
     }
-    this.exito.set(this.foro.restablecerPassword(this.email(), this.formPassword.controls.nueva.value).mensaje);
+    this.exito.set((await this.foro.restablecerPassword(this.email(), this.formPassword.controls.nueva.value)).mensaje);
   }
 }

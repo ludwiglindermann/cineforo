@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ForoFacade } from '../servicios/foro-facade.service';
@@ -14,6 +14,9 @@ import { sinSoloEspacios } from '../validadores/validadores';
         <div class="col-12 col-lg-8">
           <div class="cf-card p-4">
             <h1 class="h3 fw-bold mb-4"><i class="bi bi-plus-circle me-2 text-ambar"></i>Publicar un tema</h1>
+            @if (error()) {
+              <div class="alert alert-danger py-2" role="alert">{{ error() }}</div>
+            }
             <form [formGroup]="form" (ngSubmit)="publicar()" novalidate>
               <div class="row g-3">
                 <div class="col-12 col-md-8">
@@ -66,13 +69,15 @@ export class NuevoTema {
     spoiler: [false],
   });
   readonly c = this.form.controls;
+  readonly error = signal('');
 
-  publicar(): void {
+  async publicar(): Promise<void> {
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       return;
     }
-    const r = this.foro.publicarTema(this.form.getRawValue());
+    const r = await this.foro.publicarTema(this.form.getRawValue());
+    this.error.set(r.ok ? '' : r.mensaje);
     if (r.ok && r.dato) {
       this.router.navigate(['/tema', r.dato.id]);
     }
