@@ -1,114 +1,125 @@
-# CineForo – Sistema de Foros en Línea de Cine y Series
+# CineForo v2 — Foro de cine y series
 
-**DSY2205 Desarrollo Full Stack III – Experiencia 1, Semana 2: "Programando nuestro BackEnd"**
+Proyecto de Desarrollo Fullstack III (Duoc UC). Sumativa 2: **FrontEnd en Angular + 3 microservicios
+Spring Boot creados con arquetipo propio + Oracle Cloud + Docker**.
 
-Backend de un foro de cine y series construido con **arquitectura de microservicios** en
-**Java 17 + Spring Boot 3**, con base de datos **Oracle Autonomous Database (Oracle Cloud)**.
+```
+cineforo/
+├── arquetipo/          Arquetipo Maven v1.1.0 (base de los 3 microservicios)
+├── usuarios-ms/        Microservicio de usuarios, roles y login      → puerto 8081
+├── foro-ms/            Microservicio de categorías, temas y comentarios → puerto 8082
+├── moderacion-ms/      Microservicio de sanciones (banear/restaurar) → puerto 8083
+├── cineforo-web/       FrontEnd Angular 22 + Bootstrap 5             → puerto 80 (Docker) / 4200 (local)
+├── scripts/            Scripts SQL para Oracle Cloud (Autonomous Database)
+├── postman/            Colección Postman con 54 peticiones
+├── docker-compose.yml  Levanta los 4 contenedores
+└── .env.example        Variables para Docker (clave BD y usuario de Docker Hub)
+```
 
 ## Arquitectura
 
 ```
-                 ┌─────────────────────────┐      REST (valida autor y rol)     ┌─────────────────────────┐
-  Postman  ───►  │  usuarios-ms  :8081     │  ◄──────────────────────────────── │  foro-ms  :8082         │  ◄─── Postman
-                 │  roles, usuarios, login │                                    │  categorías, temas,     │
-                 └────────────┬────────────┘                                    │  comentarios, búsqueda  │
-                              │ JPA                                             └────────────┬────────────┘
-                              ▼                                                              │ JPA
-                 ┌─────────────────────────┐                                    ┌────────────▼────────────┐
-                 │ Esquema USUARIOS_MS     │        Oracle Cloud (foros)        │ Esquema FORO_MS         │
-                 │ ROL, USUARIO            │                                    │ CATEGORIA, TEMA,        │
-                 └─────────────────────────┘                                    │ COMENTARIO              │
-                                                                                └─────────────────────────┘
+                   ┌────────────────────┐
+  Navegador ─────► │ cineforo-web (80)  │  Angular: datos en arreglos + localStorage
+                   └────────────────────┘
+  Postman ──┬────► usuarios-ms (8081) ───────────────┐
+            ├────► foro-ms (8082) ──► usuarios-ms     ├──► Oracle Cloud ADB (Wallet)
+            └────► moderacion-ms (8083) ──► usuarios-ms, foro-ms   │  USUARIOS_MS / FORO_MS / MODERACION_MS
 ```
 
-- **Una base de datos por microservicio**: cada uno tiene su propio esquema (usuario Oracle)
-  y solo accede a sus tablas.
-- `foro-ms` guarda el `USUARIO_ID` del autor, pero **no** tiene una FOREIGN KEY hacia `USUARIO`:
-  cuando necesita saber si un usuario existe o qué rol tiene, se lo **pregunta por REST** a `usuarios-ms`.
-- Cada microservicio está organizado en capas: `controller` → `service` → `repository` → `model`,
-  con `dto` para la entrada/salida JSON y `exception` para el manejo global de errores.
+- Cada microservicio tiene **su propio esquema** en Oracle (USUARIOS_MS, FORO_MS, MODERACION_MS).
+- El usuario que realiza la acción se envía en el header **`X-Usuario-Id`**; los permisos se validan por rol
+  (USUARIO, MODERADOR, ADMINISTRADOR) consultando a usuarios-ms.
+- Según el enunciado, el FrontEnd y el BackEnd **no necesitan comunicarse**: el FrontEnd usa arreglos de Angular.
 
-## Roles y privilegios
+## Patrones de diseño
 
-| Rol | Puede |
-|---|---|
-| **USUARIO** | registrarse, iniciar sesión, publicar temas, comentar, editar y eliminar **su propio** contenido y cuenta |
-| **MODERADOR** | lo anterior + editar y eliminar temas y comentarios **de cualquier usuario** |
-| **ADMINISTRADOR** | lo anterior + gestionar **usuarios** (roles, activar/desactivar, eliminar), **roles** y **categorías** |
-
-Quien realiza cada acción se indica con el header **`X-Usuario-Id`**.
-Si falta → `401`; si el rol no alcanza → `403`.
+| Componente | Patrón | Dónde |
+|---|---|---|
+| Arquetipo / todos los ms | **Template Method** | `comun/patron/CrudServiceBase`: algoritmo CRUD fijo con pasos que cada servicio completa (`RolService`, `CategoriaService`) |
+| usuarios-ms, foro-ms | **Builder** | `Usuario.builder()`, `Tema.builder()`, `Comentario.builder()` |
+| moderacion-ms | **Strategy** | `estrategia/ModeracionStrategy` con `TemaModeracionStrategy` y `ComentarioModeracionStrategy`, elegidas según el tipo de contenido |
+| Todos los ms | **Repository + DTO** | Spring Data JPA y records de entrada/salida |
+| cineforo-web | **Facade** | `ForoFacade`: una sola puerta de entrada para las páginas |
+| cineforo-web | **Observer** | `SesionService` con *signals* |
+| cineforo-web | **Singleton** | servicios `providedIn: 'root'` |
 
 ## Endpoints
 
-### usuarios-ms (http://localhost:8081)
+| Microservicio | Método y ruta |
+|---|---|
+| usuarios-ms | `POST /api/auth/login` · `GET/POST /api/usuarios` · `GET/PUT/DELETE /api/usuarios/{id}` · `GET/POST /api/roles` · `GET/PUT/DELETE /api/roles/{id}` |
+| foro-ms | `GET/POST /api/categorias` · `GET/PUT/DELETE /api/categorias/{id}` · `GET/POST /api/temas` · `GET/PUT/DELETE /api/temas/{id}` · `PUT /api/temas/{id}/estado` · `GET/POST /api/temas/{id}/comentarios` · `GET/PUT/DELETE /api/comentarios/{id}` · `PUT /api/comentarios/{id}/estado` |
+| moderacion-ms | `GET /api/sanciones[?vigente=true]` · `GET /api/sanciones/{id}` · `POST /api/sanciones` (banea) · `PUT /api/sanciones/{id}` (motivo) · `DELETE /api/sanciones/{id}` (revoca y restaura) |
 
-| Método | URL | Descripción |
-|---|---|---|
-| POST | `/api/auth/login` | Inicio de sesión (nombre de usuario o email + contraseña) |
-| GET | `/api/usuarios` | Lista usuarios (`?rol=MODERADOR` para filtrar) |
-| GET | `/api/usuarios/{id}` | Obtiene un usuario |
-| POST | `/api/usuarios` | Registra un usuario (rol USUARIO por defecto) |
-| PUT | `/api/usuarios/{id}` | Modifica un usuario (él mismo o un ADMINISTRADOR) |
-| DELETE | `/api/usuarios/{id}` | Elimina un usuario (ADMINISTRADOR) |
-| GET | `/api/roles` · `/api/roles/{id}` | Lista u obtiene roles |
-| POST · PUT · DELETE | `/api/roles` · `/api/roles/{id}` | Gestiona roles (ADMINISTRADOR) |
+Errores en JSON: 400 validación · 401 sin `X-Usuario-Id` · 403 rol insuficiente · 404 no existe · 409 conflicto · 503 servicio caído.
 
-### foro-ms (http://localhost:8082)
+## 1. Base de datos (Oracle Cloud)
 
-| Método | URL | Descripción |
-|---|---|---|
-| GET | `/api/categorias` · `/api/categorias/{id}` | Lista u obtiene categorías |
-| POST · PUT · DELETE | `/api/categorias` · `/api/categorias/{id}` | Gestiona categorías (ADMINISTRADOR) |
-| GET | `/api/temas` | **Busca** temas: `?categoriaId=` `?autorId=` `?q=texto` (combinables) |
-| GET | `/api/temas/{id}` | **Visualiza** un tema con sus comentarios |
-| POST | `/api/temas` | **Publica** un tema |
-| PUT · DELETE | `/api/temas/{id}` | Edita o elimina un tema (autor, MODERADOR o ADMINISTRADOR) |
-| GET | `/api/temas/{temaId}/comentarios` | Lista los comentarios de un tema |
-| POST | `/api/temas/{temaId}/comentarios` | **Comenta** un tema |
-| GET · PUT · DELETE | `/api/comentarios/{id}` | Obtiene, edita o elimina un comentario (autor, MODERADOR o ADMINISTRADOR) |
+1. En SQL Developer, conectado como **ADMIN**, ejecutar `scripts/00_crear_usuario_MODERACION_MS.sql`
+   (cambiar la clave de ejemplo por la propia, entre comillas dobles).
+2. Crear la conexión `foros_moderacion` (usuario MODERACION_MS, mismo Wallet, servicio `foros_tp`).
+3. Ejecutar cada script con su usuario: `01_usuarios_ms.sql` (USUARIOS_MS), `02_foro_ms.sql` (FORO_MS),
+   `03_moderacion_ms.sql` (MODERACION_MS).
 
-Los temas y comentarios en estado `BANEADO` no se muestran.
+## 2. Ejecutar en local
 
-## Datos de ejemplo
+```bash
+cp db-local.properties.example db-local.properties   # completar ruta del Wallet y clave
+cd usuarios-ms   && mvn spring-boot:run                # 8081
+cd foro-ms       && mvn spring-boot:run                # 8082
+cd moderacion-ms && mvn spring-boot:run                # 8083
+cd cineforo-web  && npm install && npm start           # http://localhost:4200
+```
 
-Todos los usuarios tienen la contraseña **`Cine2026!`** (guardada en Oracle como hash BCrypt).
+Importar `postman/CineForo.postman_collection.json` y ejecutar las carpetas en orden.
+Usuarios de ejemplo (FrontEnd, clave `Cine2026!`): `admin_cineforo`, `ana_moderadora`, `juan_cinefilo`.
 
-| ID | Usuario | Rol |
-|---|---|---|
-| 1 | admin_cineforo | ADMINISTRADOR |
-| 2 | ana_moderadora | MODERADOR |
-| 3 | juan_cinefilo | USUARIO |
-| 4 | maria_series | USUARIO |
-| 5 | pedro_anime | USUARIO |
-| 6 | camila_resenas | USUARIO |
+## 3. Crear un microservicio con el arquetipo
 
-Categorías: Estrenos, Series, Animación y Anime, Reseñas, Teorías y Spoilers.
+```bash
+cd arquetipo && mvn clean install
+mvn archetype:generate -DarchetypeGroupId=cl.duoc.arquetipos -DarchetypeArtifactId=microservicio-crud-archetype \
+    -DarchetypeVersion=1.1.0 -DgroupId=cl.duoc.cineforo -DartifactId=moderacion-ms \
+    -Dversion=1.0.0 -Dpackage=cl.duoc.cineforo.moderacion -DdbUser=MODERACION_MS -DserverPort=8083 \
+    -DinteractiveMode=false
+```
 
-## Cómo ejecutarlo
+El proyecto generado ya trae: `Application`, `CorsConfig`, `CrudServiceBase` (Template Method),
+excepciones y `ManejadorErrores`, `application.properties` con Wallet, **Dockerfile** y `.dockerignore`.
 
-### 1. Base de datos (una sola vez)
-1. En SQL Developer, conectado como **USUARIOS_MS**, ejecutar `scripts/01_usuarios_ms.sql` (F5).
-2. Conectado como **FORO_MS**, ejecutar `scripts/02_foro_ms.sql` (F5).
+## 4. Docker en la nube (Play with Docker)
 
-### 2. Wallet y credenciales
-1. Descomprimir `Wallet_foros.zip` dentro de esta carpeta, en una carpeta llamada **`wallet`**
-   (debe quedar `cineforo/wallet/tnsnames.ora`, `cineforo/wallet/cwallet.sso`, etc.).
-2. Copiar `db-local.properties.example` como **`db-local.properties`** y completar
-   `DB_WALLET_PATH` (ruta completa a la carpeta `wallet`, con `/`) y `DB_PASSWORD`.
+1. Entrar a <https://labs.play-with-docker.com>, iniciar sesión con Docker Hub y pulsar **+ ADD NEW INSTANCE**.
+2. Clonar el repositorio:
+   ```bash
+   git clone https://github.com/<usuario>/cineforo.git && cd cineforo
+   ```
+3. Subir el Wallet: **arrastrar `Wallet_foros.zip` sobre la terminal** (queda en la carpeta actual) y luego:
+   ```bash
+   unzip Wallet_foros.zip -d wallet && rm Wallet_foros.zip
+   ```
+4. Crear el archivo `.env` (no se sube a Git):
+   ```bash
+   cp .env.example .env && vi .env      # DB_PASSWORD y DOCKERHUB_USER
+   ```
+5. Construir y levantar los 4 contenedores:
+   ```bash
+   docker compose up -d --build
+   docker compose ps
+   docker compose logs -f moderacion-ms   # Ctrl+C para salir
+   ```
+6. Arriba de la terminal aparecen los puertos **80, 8081, 8082 y 8083** como enlaces: cada uno abre la URL
+   pública (`http://ipXXX-...-8081.direct.labs.play-with-docker.com`). Esas URLs se usan en Postman
+   (variables `usuariosUrl`, `foroUrl`, `moderacionUrl`) y el puerto 80 abre el FrontEnd.
+7. (Opcional) Publicar las imágenes en Docker Hub como registro de contenedores:
+   ```bash
+   docker login && docker compose push
+   ```
 
-`wallet/` y `db-local.properties` están en `.gitignore`: **no se suben a GitHub**.
+> Seguridad: `wallet/`, `db-local.properties` y `.env` están en `.gitignore` y **nunca** se suben ni se muestran en el video.
 
-### 3. Ejecutar (primero Usuarios, después Foro)
-- **VS Code** (con *Extension Pack for Java* y *Spring Boot Extension Pack*): abrir la carpeta
-  `cineforo` y, en el panel **Spring Boot Dashboard**, iniciar `usuarios-ms` y luego `foro-ms`.
-- **Terminal**: en `usuarios-ms` y luego en `foro-ms`, ejecutar `mvn spring-boot:run`.
+## Versionado (Git)
 
-### 4. Probar con Postman
-Importar `postman/CineForo.postman_collection.json` y ejecutar las carpetas en orden (1 a 7).
-Los POST guardan el ID creado para usarlo en los PUT y DELETE siguientes.
-La carpeta 7 prueba los permisos por rol y los mensajes de error.
-
-## Tecnologías
-Java 17 · Spring Boot 3.5 (Web, Data JPA, Validation) · Spring Security Crypto (BCrypt) ·
-Oracle Autonomous Database + ojdbc11 · RestClient · SLF4J · Maven · Git · Postman
+Ramas `main` (entregas) y `develop` (integración), con ramas `feature/*` por funcionalidad, fusionadas con
+`--no-ff`. Etiquetas: `v1.0.0` (Sumativa 1) y `v2.0.0` (Sumativa 2).
