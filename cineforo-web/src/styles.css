@@ -1,0 +1,89 @@
+/* ===================== CineForo: tema visual ===================== */
+:root {
+  --cf-bg: #0f1115;
+  --cf-surface: #181b22;
+  --cf-surface-2: #222632;
+  --cf-borde: #2e3340;
+  --cf-texto: #e9eaee;
+  --cf-suave: #a3a9b8;
+  --cf-ambar: #f5b301;
+  --cf-coral: #e4572e;
+}
+
+body {
+  background: var(--cf-bg);
+  color: var(--cf-texto);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main { flex: 1; }
+
+a { color: var(--cf-ambar); }
+a:hover { color: #ffd04d; }
+
+.cf-card {
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-borde);
+  border-radius: .9rem;
+}
+
+.cf-card-hover { transition: transform .15s ease, border-color .15s ease; }
+.cf-card-hover:hover { transform: translateY(-3px); border-color: var(--cf-ambar); }
+
+.btn-cf {
+  background: var(--cf-ambar);
+  color: #1a1a1a;
+  font-weight: 600;
+  border: none;
+}
+.btn-cf:hover, .btn-cf:focus { background: #ffc52e; color: #1a1a1a; }
+.btn-cf:disabled { background: #6b5a1f; color: #ccc; }
+
+.text-suave { color: var(--cf-suave) !important; }
+.text-ambar { color: var(--cf-ambar) !important; }
+.badge-cf { background: var(--cf-coral); }
+
+.cf-hero {
+  background:
+    linear-gradient(120deg, rgba(15,17,21,.95) 30%, rgba(228,87,46,.35)),
+    repeating-linear-gradient(90deg, #1b1e26 0 18px, #14161c 18px 36px);
+  border-bottom: 1px solid var(--cf-borde);
+}
+
+.form-control, .form-select {
+  background-color: var(--cf-surface-2);
+  border-color: var(--cf-borde);
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--cf-ambar);
+  box-shadow: 0 0 0 .2rem rgba(245,179,1,.2);
+}
+
+.regla-ok { color: #4cd187; }
+.regla-pendiente { color: var(--cf-suave); }
+
+.cf-icono-categoria {
+  width: 3rem; height: 3rem;
+  border-radius: .75rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--cf-surface-2);
+  color: var(--cf-ambar);
+  font-size: 1.4rem;
+}
+
+/* Tamano 1: movil (< 576px) */
+@media (max-width: 575.98px) {
+  .cf-hero h1 { font-size: 1.75rem; }
+  .cf-tabla-responsive td, .cf-tabla-responsive th { font-size: .85rem; }
+}
+/* Tamano 2: tablet (576px - 991px) */
+@media (min-width: 576px) and (max-width: 991.98px) {
+  .cf-hero h1 { font-size: 2.25rem; }
+}
+/* Tamano 3: escritorio (>= 992px) */
+@media (min-width: 992px) {
+  .cf-hero h1 { font-size: 3rem; }
+}
