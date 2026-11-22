@@ -1,0 +1,18 @@
+# Credenciales y Wallet de Oracle
+db-local.properties
+wallet/
+Wallet_*/
+*.sso
+*.p12
+*.jks
+
+# Maven
+target/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
