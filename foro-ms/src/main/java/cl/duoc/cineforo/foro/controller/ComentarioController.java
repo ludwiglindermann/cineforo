@@ -2,6 +2,7 @@ package cl.duoc.cineforo.foro.controller;
 
 import cl.duoc.cineforo.foro.dto.ComentarioRequest;
 import cl.duoc.cineforo.foro.dto.ComentarioResponse;
+import cl.duoc.cineforo.foro.dto.EstadoRequest;
 import cl.duoc.cineforo.foro.service.ComentarioService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -59,6 +60,15 @@ public class ComentarioController {
             @Valid @RequestBody ComentarioRequest datos,
             @RequestHeader(value = CategoriaController.HEADER_ACTOR, required = false) Long actorId) {
         return comentarioService.actualizar(id, datos, actorId);
+    }
+
+    /** PUT /api/comentarios/{id}/estado  {"estado":"BANEADO"}  (MODERADOR o ADMINISTRADOR) */
+    @PutMapping("/comentarios/{id}/estado")
+    public ComentarioResponse cambiarEstado(
+            @PathVariable Long id,
+            @Valid @RequestBody EstadoRequest datos,
+            @RequestHeader(value = CategoriaController.HEADER_ACTOR, required = false) Long actorId) {
+        return comentarioService.cambiarEstado(id, datos.estado(), actorId);
     }
 
     @DeleteMapping("/comentarios/{id}")

@@ -51,6 +51,42 @@ public class Tema {
     public Tema() {
     }
 
+    /** PATRON BUILDER: Tema.builder()...build() */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private final Tema obj = new Tema();
+
+        private Builder() {
+        }
+
+        public Builder titulo(String titulo) {
+            obj.titulo = titulo;
+            return this;
+        }
+
+        public Builder contenido(String contenido) {
+            obj.contenido = contenido;
+            return this;
+        }
+
+        public Builder categoria(Categoria categoria) {
+            obj.categoria = categoria;
+            return this;
+        }
+
+        public Builder usuarioId(Long usuarioId) {
+            obj.usuarioId = usuarioId;
+            return this;
+        }
+
+        public Tema build() {
+            return obj;
+        }
+    }
+
     @PrePersist
     void antesDeInsertar() {
         if (fechaCreacion == null) {

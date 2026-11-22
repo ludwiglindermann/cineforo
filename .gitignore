@@ -23,3 +23,14 @@ target/
 # ===== Sistema =====
 .DS_Store
 Thumbs.db
+
+# Variables de Docker con la clave
+.env
+
+# Frontend
+node_modules/
+cineforo-web/dist/
+cineforo-web/.angular/
+
+# ===== Entregas comprimidas (se suben al AVA, no a Git) =====
+Exp*_S*_*.zip

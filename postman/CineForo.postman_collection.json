@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "CineForo - Microservicios (DSY2205)",
-    "description": "Pruebas de los microservicios de Usuarios (puerto 8081) y Foro (puerto 8082).\n\nUsuarios de ejemplo (clave Cine2026!): 1 admin_cineforo (ADMINISTRADOR), 2 ana_moderadora (MODERADOR), 3 juan_cinefilo, 4 maria_series, 5 pedro_anime, 6 camila_resenas (USUARIO).\n\nEl header X-Usuario-Id indica que usuario realiza la accion.\nEjecuta las carpetas en orden: los POST guardan el ID creado para los PUT y DELETE siguientes.",
+    "name": "CineForo v2 - Microservicios (DSY2205 Sumativa 2)",
+    "description": "Pruebas de los microservicios de Usuarios (8081), Foro (8082) y Moderacion (8083).\nEn Docker/Play with Docker, cambia usuariosUrl, foroUrl y moderacionUrl por las URL publicas.\n\nUsuarios de ejemplo (clave Cine2026!): 1 admin_cineforo (ADMINISTRADOR), 2 ana_moderadora (MODERADOR), 3 juan_cinefilo, 4 maria_series, 5 pedro_anime, 6 camila_resenas (USUARIO).\n\nEl header X-Usuario-Id indica que usuario realiza la accion.\nEjecuta las carpetas en orden: los POST guardan el ID creado para los PUT y DELETE siguientes.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -12,6 +12,10 @@
     {
       "key": "foroUrl",
       "value": "http://localhost:8082/api"
+    },
+    {
+      "key": "moderacionUrl",
+      "value": "http://localhost:8083/api"
     },
     {
       "key": "adminId",
@@ -47,6 +51,10 @@
     },
     {
       "key": "nuevoComentarioId",
+      "value": ""
+    },
+    {
+      "key": "nuevaSancionId",
       "value": ""
     }
   ],
@@ -1170,6 +1178,287 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Responde 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Moderacion (Strategy)",
+      "item": [
+        {
+          "name": "GET - Listar sanciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{moderacionUrl}}/sanciones"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Solo sanciones vigentes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{moderacionUrl}}/sanciones?vigente=true"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Obtener sancion por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{moderacionUrl}}/sanciones/1"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST - Moderadora banea el tema 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{moderadoraId}}"
+              }
+            ],
+            "url": "{{moderacionUrl}}/sanciones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoContenido\": \"TEMA\",\n  \"contenidoId\": 2,\n  \"motivo\": \"Contenido duplicado de otro tema ya publicado\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('nuevaSancionId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - El tema 2 ya no es visible en el foro (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/temas/2"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT - Corregir motivo de la sancion",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{moderadoraId}}"
+              }
+            ],
+            "url": "{{moderacionUrl}}/sanciones/{{nuevaSancionId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Tema duplicado: ya existia una conversacion igual en Estrenos\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE - Revocar sancion (restaura el tema)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{moderadoraId}}"
+              }
+            ],
+            "url": "{{moderacionUrl}}/sanciones/{{nuevaSancionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - El tema 2 vuelve a ser visible (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{foroUrl}}/temas/2"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - Un usuario normal intenta banear",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{juanId}}"
+              }
+            ],
+            "url": "{{moderacionUrl}}/sanciones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoContenido\": \"COMENTARIO\",\n  \"contenidoId\": 1,\n  \"motivo\": \"No me gusta este comentario\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "409 - Banear contenido ya sancionado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Usuario-Id",
+                "value": "{{moderadoraId}}"
+              }
+            ],
+            "url": "{{moderacionUrl}}/sanciones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoContenido\": \"TEMA\",\n  \"contenidoId\": 10,\n  \"motivo\": \"Intento de sancion duplicada\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "401 - Banear sin X-Usuario-Id",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{moderacionUrl}}/sanciones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoContenido\": \"TEMA\",\n  \"contenidoId\": 3,\n  \"motivo\": \"Sancion sin identificarse\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', function () { pm.response.to.have.status(401); });"
                 ]
               }
             }

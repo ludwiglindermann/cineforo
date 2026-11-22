@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archetype-descriptor
+        xmlns="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.1.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.1.0 https://maven.apache.org/xsd/archetype-descriptor-1.1.0.xsd"
+        name="microservicio-crud-archetype">
+
+    <!-- Datos que se piden al generar un microservicio con el arquetipo -->
+    <requiredProperties>
+        <requiredProperty key="dbUser">
+            <defaultValue>APP_MS</defaultValue>
+        </requiredProperty>
+        <requiredProperty key="serverPort">
+            <defaultValue>8080</defaultValue>
+        </requiredProperty>
+    </requiredProperties>
+
+    <fileSets>
+        <fileSet filtered="true" packaged="true" encoding="UTF-8">
+            <directory>src/main/java</directory>
+            <includes>
+                <include>**/*.java</include>
+            </includes>
+        </fileSet>
+        <fileSet filtered="true" encoding="UTF-8">
+            <directory>src/main/resources</directory>
+            <includes>
+                <include>**/*.properties</include>
+            </includes>
+        </fileSet>
+        <fileSet filtered="true" encoding="UTF-8">
+            <directory></directory>
+            <includes>
+                <include>README.md</include>
+                <include>.gitignore</include>
+                <include>db-local.properties.example</include>
+                <include>Dockerfile</include>
+                <include>.dockerignore</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</archetype-descriptor>

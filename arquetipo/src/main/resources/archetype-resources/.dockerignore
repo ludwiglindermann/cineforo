@@ -1,0 +1,6 @@
+target/
+db-local.properties
+wallet/
+.git/
+.vscode/
+.idea/

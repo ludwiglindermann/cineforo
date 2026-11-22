@@ -1,6 +1,6 @@
 # =====================================================================
 # Copia este archivo como "db-local.properties" (en esta misma carpeta,
-# la raiz "cineforo") y completa tus datos. Lo usan los DOS microservicios.
+# la raiz "cineforo") y completa tus datos. Lo usan los TRES microservicios.
 # db-local.properties esta en .gitignore: tu clave NO se sube a GitHub.
 # =====================================================================
 
@@ -11,5 +11,5 @@ DB_TNS_NAME=foros_tp
 # Ejemplo: C:/Users/tu_usuario/Documents/Duoc/cineforo/wallet
 DB_WALLET_PATH=C:/ruta/completa/a/cineforo/wallet
 
-# Clave de los usuarios USUARIOS_MS y FORO_MS
+# Clave de los usuarios USUARIOS_MS, FORO_MS y MODERACION_MS
 DB_PASSWORD=tu_clave_aqui

@@ -3,7 +3,7 @@ package cl.duoc.cineforo.foro.service;
 import cl.duoc.cineforo.foro.client.UsuarioRemoto;
 import cl.duoc.cineforo.foro.dto.ComentarioRequest;
 import cl.duoc.cineforo.foro.dto.ComentarioResponse;
-import cl.duoc.cineforo.foro.exception.RecursoNoEncontradoException;
+import cl.duoc.cineforo.foro.comun.excepcion.RecursoNoEncontradoException;
 import cl.duoc.cineforo.foro.model.Comentario;
 import cl.duoc.cineforo.foro.model.EstadoContenido;
 import cl.duoc.cineforo.foro.model.Tema;
@@ -46,10 +46,12 @@ public class ComentarioService {
     public ComentarioResponse comentar(Long temaId, ComentarioRequest datos, Long actorId) {
         Tema tema = temaService.buscarActivo(temaId);
         UsuarioRemoto autor = permisoService.obtenerActor(actorId);
-        Comentario comentario = new Comentario();
-        comentario.setContenido(datos.contenido());
-        comentario.setTema(tema);
-        comentario.setUsuarioId(autor.id());
+        // Patron Builder
+        Comentario comentario = Comentario.builder()
+                .contenido(datos.contenido())
+                .tema(tema)
+                .usuarioId(autor.id())
+                .build();
         Comentario guardado = comentarioRepository.save(comentario);
         log.info("Comentario publicado en el tema {} (ID {}) por {}", temaId, guardado.getId(), autor.nombreUsuario());
         return ComentarioResponse.desde(guardado);
@@ -71,6 +73,17 @@ public class ComentarioService {
         UsuarioRemoto actor = permisoService.exigirAutorOModerador(actorId, comentario.getUsuarioId(), "este comentario");
         comentarioRepository.delete(comentario);
         log.info("Comentario eliminado: ID {} por {} ({})", id, actor.nombreUsuario(), actor.nombreRol());
+    }
+
+    /** Cambia el estado (ACTIVO/BANEADO). Solo MODERADOR o ADMINISTRADOR; lo usa moderacion-ms. */
+    @Transactional
+    public ComentarioResponse cambiarEstado(Long id, EstadoContenido estado, Long actorId) {
+        UsuarioRemoto actor = permisoService.exigirModerador(actorId);
+        Comentario comentario = buscar(id);
+        comentario.setEstado(estado);
+        Comentario guardado = comentarioRepository.save(comentario);
+        log.info("Comentario {} cambiado a {} por {}", id, estado, actor.nombreUsuario());
+        return ComentarioResponse.desde(guardado);
     }
 
     private Comentario buscar(Long id) {
