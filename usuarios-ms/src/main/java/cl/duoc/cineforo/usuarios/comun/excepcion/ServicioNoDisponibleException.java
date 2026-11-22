@@ -1,6 +1,6 @@
-package cl.duoc.cineforo.foro.exception;
+package cl.duoc.cineforo.usuarios.comun.excepcion;
 
-/** HTTP 503: el microservicio de Usuarios no responde. */
+/** HTTP 503: otro microservicio del que se depende no responde. */
 public class ServicioNoDisponibleException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;

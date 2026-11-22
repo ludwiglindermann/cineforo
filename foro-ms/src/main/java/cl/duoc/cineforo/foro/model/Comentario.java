@@ -43,6 +43,37 @@ public class Comentario {
     public Comentario() {
     }
 
+    /** PATRON BUILDER: Comentario.builder()...build() */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private final Comentario obj = new Comentario();
+
+        private Builder() {
+        }
+
+        public Builder contenido(String contenido) {
+            obj.contenido = contenido;
+            return this;
+        }
+
+        public Builder tema(Tema tema) {
+            obj.tema = tema;
+            return this;
+        }
+
+        public Builder usuarioId(Long usuarioId) {
+            obj.usuarioId = usuarioId;
+            return this;
+        }
+
+        public Comentario build() {
+            return obj;
+        }
+    }
+
     @PrePersist
     void antesDeInsertar() {
         if (fechaCreacion == null) {

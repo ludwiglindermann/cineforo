@@ -1,7 +1,7 @@
 package cl.duoc.cineforo.foro.client;
 
-import cl.duoc.cineforo.foro.exception.NoAutenticadoException;
-import cl.duoc.cineforo.foro.exception.ServicioNoDisponibleException;
+import cl.duoc.cineforo.foro.comun.excepcion.NoAutenticadoException;
+import cl.duoc.cineforo.foro.comun.excepcion.ServicioNoDisponibleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,4 +1,4 @@
-package cl.duoc.cineforo.foro.exception;
+package cl.duoc.cineforo.foro.comun.excepcion;
 
 /** HTTP 404: el recurso buscado no existe. */
 public class RecursoNoEncontradoException extends RuntimeException {

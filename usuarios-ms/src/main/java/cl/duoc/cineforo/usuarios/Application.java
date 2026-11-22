@@ -1,12 +1,12 @@
-package cl.duoc.cineforo.foro;
+package cl.duoc.cineforo.usuarios;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ForoApplication {
+public class Application {
 
     public static void main(String[] args) {
-        SpringApplication.run(ForoApplication.class, args);
+        SpringApplication.run(Application.class, args);
     }
 }

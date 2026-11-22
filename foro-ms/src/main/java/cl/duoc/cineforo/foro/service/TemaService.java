@@ -5,7 +5,7 @@ import cl.duoc.cineforo.foro.dto.ComentarioResponse;
 import cl.duoc.cineforo.foro.dto.TemaDetalleResponse;
 import cl.duoc.cineforo.foro.dto.TemaRequest;
 import cl.duoc.cineforo.foro.dto.TemaResponse;
-import cl.duoc.cineforo.foro.exception.RecursoNoEncontradoException;
+import cl.duoc.cineforo.foro.comun.excepcion.RecursoNoEncontradoException;
 import cl.duoc.cineforo.foro.model.EstadoContenido;
 import cl.duoc.cineforo.foro.model.Tema;
 import cl.duoc.cineforo.foro.repository.ComentarioRepository;
@@ -58,11 +58,13 @@ public class TemaService {
     @Transactional
     public TemaResponse publicar(TemaRequest datos, Long actorId) {
         UsuarioRemoto autor = permisoService.obtenerActor(actorId);
-        Tema tema = new Tema();
-        tema.setTitulo(datos.titulo());
-        tema.setContenido(datos.contenido());
-        tema.setCategoria(categoriaService.buscar(datos.categoriaId()));
-        tema.setUsuarioId(autor.id());
+        // Patron Builder
+        Tema tema = Tema.builder()
+                .titulo(datos.titulo())
+                .contenido(datos.contenido())
+                .categoria(categoriaService.buscarCategoria(datos.categoriaId()))
+                .usuarioId(autor.id())
+                .build();
         Tema guardado = temaRepository.save(tema);
         log.info("Tema publicado: '{}' (ID {}) por {}", guardado.getTitulo(), guardado.getId(), autor.nombreUsuario());
         return TemaResponse.desde(guardado, 0);
@@ -74,7 +76,7 @@ public class TemaService {
         UsuarioRemoto actor = permisoService.exigirAutorOModerador(actorId, tema.getUsuarioId(), "este tema");
         tema.setTitulo(datos.titulo());
         tema.setContenido(datos.contenido());
-        tema.setCategoria(categoriaService.buscar(datos.categoriaId()));
+        tema.setCategoria(categoriaService.buscarCategoria(datos.categoriaId()));
         Tema guardado = temaRepository.save(tema);
         log.info("Tema actualizado: ID {} por {} ({})", id, actor.nombreUsuario(), actor.nombreRol());
         return TemaResponse.desde(guardado,
@@ -88,6 +90,18 @@ public class TemaService {
         UsuarioRemoto actor = permisoService.exigirAutorOModerador(actorId, tema.getUsuarioId(), "este tema");
         temaRepository.delete(tema);
         log.info("Tema eliminado: ID {} por {} ({})", id, actor.nombreUsuario(), actor.nombreRol());
+    }
+
+    /** Cambia el estado (ACTIVO/BANEADO). Solo MODERADOR o ADMINISTRADOR; lo usa moderacion-ms. */
+    @Transactional
+    public TemaResponse cambiarEstado(Long id, EstadoContenido estado, Long actorId) {
+        UsuarioRemoto actor = permisoService.exigirModerador(actorId);
+        Tema tema = buscar(id);
+        tema.setEstado(estado);
+        Tema guardado = temaRepository.save(tema);
+        log.info("Tema {} cambiado a {} por {}", id, estado, actor.nombreUsuario());
+        return TemaResponse.desde(guardado,
+                comentarioRepository.countByTema_IdAndEstado(id, EstadoContenido.ACTIVO));
     }
 
     Tema buscar(Long id) {

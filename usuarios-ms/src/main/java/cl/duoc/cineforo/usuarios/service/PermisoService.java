@@ -1,7 +1,7 @@
 package cl.duoc.cineforo.usuarios.service;
 
-import cl.duoc.cineforo.usuarios.exception.AccesoDenegadoException;
-import cl.duoc.cineforo.usuarios.exception.NoAutenticadoException;
+import cl.duoc.cineforo.usuarios.comun.excepcion.AccesoDenegadoException;
+import cl.duoc.cineforo.usuarios.comun.excepcion.NoAutenticadoException;
 import cl.duoc.cineforo.usuarios.model.Usuario;
 import cl.duoc.cineforo.usuarios.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;

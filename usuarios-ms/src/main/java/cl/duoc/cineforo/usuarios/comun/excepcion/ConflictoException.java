@@ -1,6 +1,6 @@
-package cl.duoc.cineforo.foro.exception;
+package cl.duoc.cineforo.usuarios.comun.excepcion;
 
-/** HTTP 409: la operacion choca con datos existentes (duplicados, rol en uso...). */
+/** HTTP 409: la operacion choca con datos existentes (duplicados, recurso en uso). */
 public class ConflictoException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;

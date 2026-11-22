@@ -1,0 +1,5 @@
+# Copia este archivo como db-local.properties y completa tus datos.
+# db-local.properties esta en .gitignore: tu clave NO se sube a Git.
+DB_TNS_NAME=nombrebd_tp
+DB_WALLET_PATH=C:/ruta/completa/al/wallet
+DB_PASSWORD=tu_clave_aqui

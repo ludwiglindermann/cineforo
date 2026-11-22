@@ -1,22 +1,23 @@
 package cl.duoc.cineforo.foro.service;
 
+import cl.duoc.cineforo.foro.comun.excepcion.ConflictoException;
+import cl.duoc.cineforo.foro.comun.patron.CrudServiceBase;
 import cl.duoc.cineforo.foro.dto.CategoriaRequest;
 import cl.duoc.cineforo.foro.dto.CategoriaResponse;
-import cl.duoc.cineforo.foro.exception.ConflictoException;
-import cl.duoc.cineforo.foro.exception.RecursoNoEncontradoException;
 import cl.duoc.cineforo.foro.model.Categoria;
 import cl.duoc.cineforo.foro.repository.CategoriaRepository;
 import cl.duoc.cineforo.foro.repository.TemaRepository;
-import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Servicio de categorias. PATRON TEMPLATE METHOD: el flujo CRUD viene de
+ * CrudServiceBase (arquetipo); aqui solo se implementan los pasos propios
+ * de Categoria y la regla de que solo un ADMINISTRADOR las gestiona.
+ */
 @Service
-public class CategoriaService {
-
-    private static final Logger log = LoggerFactory.getLogger(CategoriaService.class);
+public class CategoriaService extends CrudServiceBase<Categoria, Long, CategoriaRequest, CategoriaResponse> {
 
     private final CategoriaRepository categoriaRepository;
     private final TemaRepository temaRepository;
@@ -29,42 +30,55 @@ public class CategoriaService {
         this.permisoService = permisoService;
     }
 
-    @Transactional(readOnly = true)
-    public List<CategoriaResponse> listar() {
-        return categoriaRepository.findAll().stream().map(CategoriaResponse::desde).toList();
+    // ---------- Pasos del Template Method ----------
+    @Override
+    protected JpaRepository<Categoria, Long> repositorio() {
+        return categoriaRepository;
     }
 
-    @Transactional(readOnly = true)
-    public CategoriaResponse obtener(Long id) {
-        return CategoriaResponse.desde(buscar(id));
+    @Override
+    protected Categoria crearEntidad(CategoriaRequest datos) {
+        Categoria categoria = new Categoria();
+        categoria.setNombre(datos.nombre());
+        categoria.setDescripcion(datos.descripcion());
+        return categoria;
     }
 
+    @Override
+    protected void actualizarEntidad(Categoria categoria, CategoriaRequest datos) {
+        categoria.setNombre(datos.nombre());
+        categoria.setDescripcion(datos.descripcion());
+    }
+
+    @Override
+    protected CategoriaResponse aRespuesta(Categoria categoria) {
+        return CategoriaResponse.desde(categoria);
+    }
+
+    @Override
+    protected String nombreRecurso() {
+        return "la categoria";
+    }
+
+    // ---------- Operaciones con permisos ----------
     @Transactional
     public CategoriaResponse crear(CategoriaRequest datos, Long actorId) {
         permisoService.exigirAdministrador(actorId);
         if (categoriaRepository.existsByNombreIgnoreCase(datos.nombre())) {
             throw new ConflictoException("Ya existe una categoria llamada " + datos.nombre());
         }
-        Categoria categoria = new Categoria();
-        categoria.setNombre(datos.nombre());
-        categoria.setDescripcion(datos.descripcion());
-        Categoria guardada = categoriaRepository.save(categoria);
-        log.info("Categoria creada: {} (ID {})", guardada.getNombre(), guardada.getId());
-        return CategoriaResponse.desde(guardada);
+        return crear(datos);
     }
 
     @Transactional
     public CategoriaResponse actualizar(Long id, CategoriaRequest datos, Long actorId) {
         permisoService.exigirAdministrador(actorId);
-        Categoria categoria = buscar(id);
-        if (!categoria.getNombre().equalsIgnoreCase(datos.nombre())
+        Categoria actual = buscar(id);
+        if (!actual.getNombre().equalsIgnoreCase(datos.nombre())
                 && categoriaRepository.existsByNombreIgnoreCase(datos.nombre())) {
             throw new ConflictoException("Ya existe una categoria llamada " + datos.nombre());
         }
-        categoria.setNombre(datos.nombre());
-        categoria.setDescripcion(datos.descripcion());
-        log.info("Categoria actualizada: ID {}", id);
-        return CategoriaResponse.desde(categoriaRepository.save(categoria));
+        return actualizar(id, datos);
     }
 
     @Transactional
@@ -75,12 +89,11 @@ public class CategoriaService {
             throw new ConflictoException("No se puede eliminar la categoria " + categoria.getNombre()
                     + " porque tiene temas publicados");
         }
-        categoriaRepository.delete(categoria);
-        log.info("Categoria eliminada: {} (ID {})", categoria.getNombre(), id);
+        eliminar(id);
     }
 
-    Categoria buscar(Long id) {
-        return categoriaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la categoria con ID " + id));
+    /** Usado por TemaService para asociar la categoria a un tema. */
+    public Categoria buscarCategoria(Long id) {
+        return buscar(id);
     }
 }

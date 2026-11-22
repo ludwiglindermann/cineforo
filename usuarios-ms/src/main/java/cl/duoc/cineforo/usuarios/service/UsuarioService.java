@@ -3,9 +3,9 @@ package cl.duoc.cineforo.usuarios.service;
 import cl.duoc.cineforo.usuarios.dto.UsuarioRequest;
 import cl.duoc.cineforo.usuarios.dto.UsuarioResponse;
 import cl.duoc.cineforo.usuarios.dto.UsuarioUpdateRequest;
-import cl.duoc.cineforo.usuarios.exception.AccesoDenegadoException;
-import cl.duoc.cineforo.usuarios.exception.ConflictoException;
-import cl.duoc.cineforo.usuarios.exception.RecursoNoEncontradoException;
+import cl.duoc.cineforo.usuarios.comun.excepcion.AccesoDenegadoException;
+import cl.duoc.cineforo.usuarios.comun.excepcion.ConflictoException;
+import cl.duoc.cineforo.usuarios.comun.excepcion.RecursoNoEncontradoException;
 import cl.duoc.cineforo.usuarios.model.Rol;
 import cl.duoc.cineforo.usuarios.model.Usuario;
 import cl.duoc.cineforo.usuarios.repository.RolRepository;
@@ -72,12 +72,14 @@ public class UsuarioService {
             }
         }
 
-        Usuario usuario = new Usuario();
-        usuario.setNombreUsuario(datos.nombreUsuario());
-        usuario.setEmail(datos.email().toLowerCase());
-        usuario.setPassword(passwordEncoder.encode(datos.password()));
-        usuario.setRol(rol);
-        usuario.setActivo(Boolean.TRUE);
+        // Patron Builder
+        Usuario usuario = Usuario.builder()
+                .nombreUsuario(datos.nombreUsuario())
+                .email(datos.email().toLowerCase())
+                .passwordEncriptada(passwordEncoder.encode(datos.password()))
+                .rol(rol)
+                .activo(true)
+                .build();
 
         Usuario guardado = usuarioRepository.save(usuario);
         log.info("Usuario registrado: {} (ID {}, rol {})", guardado.getNombreUsuario(), guardado.getId(), rol.getNombre());
