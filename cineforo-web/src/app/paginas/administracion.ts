@@ -36,7 +36,7 @@ import { sinSoloEspacios } from '../validadores/validadores';
                       <td>
                         <button class="btn btn-sm" type="button" [disabled]="u.id === foro.sesion.usuario()?.id"
                                 [class.btn-outline-success]="!u.activo" [class.btn-outline-warning]="u.activo"
-                                (click)="mensaje.set(foro.alternarActivo(u.id).mensaje)">
+                                (click)="alternarActivo(u.id)">
                           {{ u.activo ? 'Desactivar' : 'Activar' }}
                         </button>
                       </td>
@@ -73,7 +73,7 @@ import { sinSoloEspacios } from '../validadores/validadores';
               @for (c of foro.categorias(); track c.id) {
                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
                   <span><i class="bi {{ c.icono }} me-2 text-ambar"></i>{{ c.nombre }} <span class="small text-suave">({{ foro.contarTemas(c.id) }})</span></span>
-                  <button class="btn btn-sm btn-outline-danger" type="button" (click)="mensaje.set(foro.eliminarCategoria(c.id).mensaje)" [attr.aria-label]="'Eliminar ' + c.nombre"><i class="bi bi-trash"></i></button>
+                  <button class="btn btn-sm btn-outline-danger" type="button" (click)="eliminarCategoria(c.id)" [attr.aria-label]="'Eliminar ' + c.nombre"><i class="bi bi-trash"></i></button>
                 </li>
               }
             </ul>
@@ -93,16 +93,24 @@ export class Administracion {
     descripcion: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(250), sinSoloEspacios()]],
   });
 
-  cambiarRol(id: number, rol: NombreRol): void {
-    this.mensaje.set(this.foro.cambiarRol(id, rol).mensaje);
+  async cambiarRol(id: number, rol: NombreRol): Promise<void> {
+    this.mensaje.set((await this.foro.cambiarRol(id, rol)).mensaje);
   }
 
-  crearCategoria(): void {
+  async alternarActivo(id: number): Promise<void> {
+    this.mensaje.set((await this.foro.alternarActivo(id)).mensaje);
+  }
+
+  async eliminarCategoria(id: number): Promise<void> {
+    this.mensaje.set((await this.foro.eliminarCategoria(id)).mensaje);
+  }
+
+  async crearCategoria(): Promise<void> {
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       return;
     }
-    const r = this.foro.crearCategoria(this.form.controls.nombre.value, this.form.controls.descripcion.value);
+    const r = await this.foro.crearCategoria(this.form.controls.nombre.value, this.form.controls.descripcion.value);
     this.mensaje.set(r.mensaje);
     if (r.ok) {
       this.form.reset();

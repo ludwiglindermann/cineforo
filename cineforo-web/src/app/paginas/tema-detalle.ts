@@ -47,13 +47,16 @@ import { sinSoloEspacios } from '../validadores/validadores';
                 </div>
                 <p class="mb-1 mt-1">{{ c.contenido }}</p>
                 @if (foro.puedeEliminar(c.autorId)) {
-                  <button class="btn btn-link btn-sm text-danger p-0" type="button" (click)="foro.eliminarComentario(c.id)">Eliminar</button>
+                  <button class="btn btn-link btn-sm text-danger p-0" type="button" (click)="eliminarComentario(c.id)">Eliminar</button>
                 }
               </div>
             } @empty {
               <p class="text-suave">Sé el primero en comentar.</p>
             }
 
+            @if (error()) {
+              <div class="alert alert-danger mt-3 py-2" role="alert">{{ error() }}</div>
+            }
             @if (foro.sesion.conectado()) {
               <form class="cf-card p-3 mt-3" [formGroup]="form" (ngSubmit)="comentar()" novalidate>
                 <label for="comentario" class="form-label fw-semibold">Tu comentario</label>
@@ -92,6 +95,7 @@ export class TemaDetalle {
   private readonly router = inject(Router);
   readonly id = input.required<string>();
   readonly verSpoiler = signal(false);
+  readonly error = signal('');
   readonly tema = computed(() => this.foro.tema(Number(this.id())));
   readonly comentarios = computed(() => {
     this.foro.comentariosActivos(); // dependencia para recalcular al comentar o moderar
@@ -102,20 +106,28 @@ export class TemaDetalle {
     contenido: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(1000), sinSoloEspacios()]],
   });
 
-  comentar(): void {
+  async comentar(): Promise<void> {
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       return;
     }
-    const r = this.foro.comentar(Number(this.id()), this.form.controls.contenido.value);
+    const r = await this.foro.comentar(Number(this.id()), this.form.controls.contenido.value);
+    this.error.set(r.ok ? '' : r.mensaje);
     if (r.ok) {
       this.form.reset();
     }
   }
 
-  eliminarTema(): void {
-    if (this.foro.eliminarTema(Number(this.id())).ok) {
+  async eliminarTema(): Promise<void> {
+    const r = await this.foro.eliminarTema(Number(this.id()));
+    this.error.set(r.ok ? '' : r.mensaje);
+    if (r.ok) {
       this.router.navigate(['/']);
     }
+  }
+
+  async eliminarComentario(id: number): Promise<void> {
+    const r = await this.foro.eliminarComentario(id);
+    this.error.set(r.ok ? '' : r.mensaje);
   }
 }
