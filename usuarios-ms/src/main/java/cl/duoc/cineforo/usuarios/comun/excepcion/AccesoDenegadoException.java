@@ -1,6 +1,6 @@
-package cl.duoc.cineforo.foro.exception;
+package cl.duoc.cineforo.usuarios.comun.excepcion;
 
-/** HTTP 403: el usuario existe, pero su rol no le permite hacer esta operacion. */
+/** HTTP 403: el rol del usuario no le permite esta operacion. */
 public class AccesoDenegadoException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;

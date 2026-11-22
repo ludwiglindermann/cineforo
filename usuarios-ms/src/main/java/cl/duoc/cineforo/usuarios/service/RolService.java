@@ -1,22 +1,24 @@
 package cl.duoc.cineforo.usuarios.service;
 
+import cl.duoc.cineforo.usuarios.comun.excepcion.ConflictoException;
+import cl.duoc.cineforo.usuarios.comun.patron.CrudServiceBase;
 import cl.duoc.cineforo.usuarios.dto.RolRequest;
 import cl.duoc.cineforo.usuarios.dto.RolResponse;
-import cl.duoc.cineforo.usuarios.exception.ConflictoException;
-import cl.duoc.cineforo.usuarios.exception.RecursoNoEncontradoException;
 import cl.duoc.cineforo.usuarios.model.Rol;
 import cl.duoc.cineforo.usuarios.repository.RolRepository;
 import cl.duoc.cineforo.usuarios.repository.UsuarioRepository;
-import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Servicio de roles. PATRON TEMPLATE METHOD: hereda de CrudServiceBase
+ * (incluido en el arquetipo) el flujo comun de listar, obtener, crear,
+ * actualizar y eliminar, e implementa solo los pasos propios de Rol.
+ * Antes de cada escritura agrega la regla de negocio: solo un ADMINISTRADOR.
+ */
 @Service
-public class RolService {
-
-    private static final Logger log = LoggerFactory.getLogger(RolService.class);
+public class RolService extends CrudServiceBase<Rol, Long, RolRequest, RolResponse> {
 
     private final RolRepository rolRepository;
     private final UsuarioRepository usuarioRepository;
@@ -29,41 +31,54 @@ public class RolService {
         this.permisoService = permisoService;
     }
 
-    @Transactional(readOnly = true)
-    public List<RolResponse> listar() {
-        return rolRepository.findAll().stream().map(RolResponse::desde).toList();
+    // ---------- Pasos del Template Method ----------
+    @Override
+    protected JpaRepository<Rol, Long> repositorio() {
+        return rolRepository;
     }
 
-    @Transactional(readOnly = true)
-    public RolResponse obtener(Long id) {
-        return RolResponse.desde(buscar(id));
+    @Override
+    protected Rol crearEntidad(RolRequest datos) {
+        Rol rol = new Rol();
+        rol.setNombre(datos.nombre());
+        rol.setDescripcion(datos.descripcion());
+        return rol;
     }
 
+    @Override
+    protected void actualizarEntidad(Rol rol, RolRequest datos) {
+        rol.setNombre(datos.nombre());
+        rol.setDescripcion(datos.descripcion());
+    }
+
+    @Override
+    protected RolResponse aRespuesta(Rol rol) {
+        return RolResponse.desde(rol);
+    }
+
+    @Override
+    protected String nombreRecurso() {
+        return "el rol";
+    }
+
+    // ---------- Operaciones con permisos ----------
     @Transactional
     public RolResponse crear(RolRequest datos, Long actorId) {
         permisoService.exigirAdministrador(actorId);
         if (rolRepository.existsByNombre(datos.nombre())) {
             throw new ConflictoException("Ya existe un rol llamado " + datos.nombre());
         }
-        Rol rol = new Rol();
-        rol.setNombre(datos.nombre());
-        rol.setDescripcion(datos.descripcion());
-        Rol guardado = rolRepository.save(rol);
-        log.info("Rol creado: {} (ID {})", guardado.getNombre(), guardado.getId());
-        return RolResponse.desde(guardado);
+        return crear(datos);
     }
 
     @Transactional
     public RolResponse actualizar(Long id, RolRequest datos, Long actorId) {
         permisoService.exigirAdministrador(actorId);
-        Rol rol = buscar(id);
-        if (!rol.getNombre().equals(datos.nombre()) && rolRepository.existsByNombre(datos.nombre())) {
+        Rol actual = buscar(id);
+        if (!actual.getNombre().equals(datos.nombre()) && rolRepository.existsByNombre(datos.nombre())) {
             throw new ConflictoException("Ya existe un rol llamado " + datos.nombre());
         }
-        rol.setNombre(datos.nombre());
-        rol.setDescripcion(datos.descripcion());
-        log.info("Rol actualizado: ID {}", id);
-        return RolResponse.desde(rolRepository.save(rol));
+        return actualizar(id, datos);
     }
 
     @Transactional
@@ -74,12 +89,6 @@ public class RolService {
             throw new ConflictoException("No se puede eliminar el rol " + rol.getNombre()
                     + " porque hay usuarios que lo tienen asignado");
         }
-        rolRepository.delete(rol);
-        log.info("Rol eliminado: {} (ID {})", rol.getNombre(), id);
-    }
-
-    Rol buscar(Long id) {
-        return rolRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro el rol con ID " + id));
+        eliminar(id);
     }
 }

@@ -16,6 +16,8 @@ import org.hibernate.type.NumericBooleanConverter;
 
 /**
  * Cuenta de usuario del foro. La contrasena se guarda encriptada con BCrypt.
+ *
+ * PATRON BUILDER (creacional): Usuario.builder().nombreUsuario(..).email(..)...build()
  */
 @Entity
 @Table(name = "USUARIO")
@@ -57,6 +59,47 @@ public class Usuario {
         }
         if (activo == null) {
             activo = Boolean.TRUE;
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /** Builder de Usuario. */
+    public static final class Builder {
+        private final Usuario usuario = new Usuario();
+
+        private Builder() {
+        }
+
+        public Builder nombreUsuario(String nombreUsuario) {
+            usuario.nombreUsuario = nombreUsuario;
+            return this;
+        }
+
+        public Builder email(String email) {
+            usuario.email = email;
+            return this;
+        }
+
+        public Builder passwordEncriptada(String hash) {
+            usuario.password = hash;
+            return this;
+        }
+
+        public Builder rol(Rol rol) {
+            usuario.rol = rol;
+            return this;
+        }
+
+        public Builder activo(boolean activo) {
+            usuario.activo = activo;
+            return this;
+        }
+
+        public Usuario build() {
+            return usuario;
         }
     }
 

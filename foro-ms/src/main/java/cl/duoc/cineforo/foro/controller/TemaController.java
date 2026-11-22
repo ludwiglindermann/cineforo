@@ -1,5 +1,6 @@
 package cl.duoc.cineforo.foro.controller;
 
+import cl.duoc.cineforo.foro.dto.EstadoRequest;
 import cl.duoc.cineforo.foro.dto.TemaDetalleResponse;
 import cl.duoc.cineforo.foro.dto.TemaRequest;
 import cl.duoc.cineforo.foro.dto.TemaResponse;
@@ -63,6 +64,15 @@ public class TemaController {
             @Valid @RequestBody TemaRequest datos,
             @RequestHeader(value = CategoriaController.HEADER_ACTOR, required = false) Long actorId) {
         return temaService.actualizar(id, datos, actorId);
+    }
+
+    /** PUT /api/temas/{id}/estado  {"estado":"BANEADO"}  (MODERADOR o ADMINISTRADOR) */
+    @PutMapping("/{id}/estado")
+    public TemaResponse cambiarEstado(
+            @PathVariable Long id,
+            @Valid @RequestBody EstadoRequest datos,
+            @RequestHeader(value = CategoriaController.HEADER_ACTOR, required = false) Long actorId) {
+        return temaService.cambiarEstado(id, datos.estado(), actorId);
     }
 
     @DeleteMapping("/{id}")

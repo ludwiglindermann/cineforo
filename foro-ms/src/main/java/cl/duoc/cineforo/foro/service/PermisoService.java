@@ -2,8 +2,8 @@ package cl.duoc.cineforo.foro.service;
 
 import cl.duoc.cineforo.foro.client.UsuarioClient;
 import cl.duoc.cineforo.foro.client.UsuarioRemoto;
-import cl.duoc.cineforo.foro.exception.AccesoDenegadoException;
-import cl.duoc.cineforo.foro.exception.NoAutenticadoException;
+import cl.duoc.cineforo.foro.comun.excepcion.AccesoDenegadoException;
+import cl.duoc.cineforo.foro.comun.excepcion.NoAutenticadoException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -37,6 +37,15 @@ public class PermisoService {
         UsuarioRemoto actor = obtenerActor(actorId);
         if (!actor.esAdministrador()) {
             throw new AccesoDenegadoException("Solo un ADMINISTRADOR puede gestionar las categorias");
+        }
+        return actor;
+    }
+
+    /** Exige rol MODERADOR o ADMINISTRADOR (403 si no lo tiene). */
+    public UsuarioRemoto exigirModerador(Long actorId) {
+        UsuarioRemoto actor = obtenerActor(actorId);
+        if (!actor.puedeModerar()) {
+            throw new AccesoDenegadoException("Solo un MODERADOR o un ADMINISTRADOR puede cambiar el estado del contenido");
         }
         return actor;
     }

@@ -1,4 +1,4 @@
-package cl.duoc.cineforo.usuarios.exception;
+package cl.duoc.cineforo.usuarios.comun.excepcion;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
- * Manejo global de excepciones: todas las respuestas de error tienen
- * el mismo formato JSON {fecha, estado, error, [campos]}.
+ * Manejo global de errores (lineamiento del arquetipo): todas las respuestas
+ * de error tienen el mismo JSON {fecha, estado, error, [campos]}.
  */
 @RestControllerAdvice
 public class ManejadorErrores {
@@ -43,11 +43,16 @@ public class ManejadorErrores {
         return respuesta(HttpStatus.FORBIDDEN, ex.getMessage(), null);
     }
 
+    @ExceptionHandler(ServicioNoDisponibleException.class)
+    public ResponseEntity<Map<String, Object>> servicioNoDisponible(ServicioNoDisponibleException ex) {
+        return respuesta(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> datosInvalidos(MethodArgumentNotValidException ex) {
         Map<String, String> campos = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors()
-                .forEach(error -> campos.put(error.getField(), error.getDefaultMessage()));
+                .forEach(e -> campos.put(e.getField(), e.getDefaultMessage()));
         return respuesta(HttpStatus.BAD_REQUEST, "Los datos enviados no son validos", campos);
     }
 
@@ -64,9 +69,9 @@ public class ManejadorErrores {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> integridad(DataIntegrityViolationException ex) {
-        log.warn("Violacion de integridad en la base de datos: {}", ex.getMostSpecificCause().getMessage());
+        log.warn("Violacion de integridad: {}", ex.getMostSpecificCause().getMessage());
         return respuesta(HttpStatus.CONFLICT,
-                "La operacion no se pudo completar porque entra en conflicto con datos existentes", null);
+                "La operacion entra en conflicto con datos existentes", null);
     }
 
     @ExceptionHandler(Exception.class)

@@ -1,6 +1,6 @@
-package cl.duoc.cineforo.foro.exception;
+package cl.duoc.cineforo.usuarios.comun.excepcion;
 
-/** HTTP 401: no se sabe quien hace la peticion, o las credenciales son incorrectas. */
+/** HTTP 401: no se sabe quien hace la peticion o las credenciales son incorrectas. */
 public class NoAutenticadoException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
