@@ -19,18 +19,22 @@ cineforo/
 ## Arquitectura
 
 ```
-                   ┌────────────────────┐
-  Navegador ─────► │ cineforo-web (4200)│  Angular: datos en arreglos + localStorage
-                   └────────────────────┘
-  Postman ──┬────► usuarios-ms (8081) ───────────────┐
-            ├────► foro-ms (8082) ──► usuarios-ms     ├──► Oracle Cloud ADB (Wallet)
-            └────► moderacion-ms (8083) ──► usuarios-ms, foro-ms   │  USUARIOS_MS / FORO_MS / MODERACION_MS
+                   ┌──────────────────────────┐   /api/auth, /api/usuarios, /api/roles
+  Navegador ─────► │ cineforo-web (4200)      │ ───────────────────────► usuarios-ms (8081) ──┐
+                   │ Angular + nginx (proxy)  │   /api/categorias, /temas, /comentarios      │
+                   └──────────────────────────┘ ───────────────────────► foro-ms (8082) ──────┼──► Oracle Cloud ADB
+                                                  /api/sanciones                               │    (Wallet)
+  Postman ───────► 8081 / 8082 / 8083           ───────────────────────► moderacion-ms (8083) ┘
 ```
 
 - Cada microservicio tiene **su propio esquema** en Oracle (USUARIOS_MS, FORO_MS, MODERACION_MS).
 - El usuario que realiza la acción se envía en el header **`X-Usuario-Id`**; los permisos se validan por rol
   (USUARIO, MODERADOR, ADMINISTRADOR) consultando a usuarios-ms.
-- Según el enunciado, el FrontEnd y el BackEnd **no necesitan comunicarse**: el FrontEnd usa arreglos de Angular.
+- **FrontEnd ↔ BackEnd:** Angular llama a los microservicios con `HttpClient` (`servicios/api.service.ts`).
+  En Docker, nginx (contenedor `cineforo-web`) reenvía cada ruta `/api/...` al contenedor que corresponde;
+  con `npm start`, lo hace `proxy.conf.json`. Las respuestas actualizan los **arreglos de Angular** (signals).
+- Si los microservicios no responden, el FrontEnd sigue funcionando en **modo local** con sus arreglos.
+  El pie de página indica el modo: *Conectado a los microservicios* o *Modo local*.
 
 ## Patrones de diseño
 
@@ -40,7 +44,8 @@ cineforo/
 | usuarios-ms, foro-ms | **Builder** | `Usuario.builder()`, `Tema.builder()`, `Comentario.builder()` |
 | moderacion-ms | **Strategy** | `estrategia/ModeracionStrategy` con `TemaModeracionStrategy` y `ComentarioModeracionStrategy`, elegidas según el tipo de contenido |
 | Todos los ms | **Repository + DTO** | Spring Data JPA y records de entrada/salida |
-| cineforo-web | **Facade** | `ForoFacade`: una sola puerta de entrada para las páginas |
+| cineforo-web | **Facade** | `ForoFacade`: una sola puerta de entrada para las páginas; decide si va al microservicio o a los arreglos locales |
+| cineforo-web | **Chain of Responsibility** | `usuarioInterceptor`: interceptor HTTP que agrega `X-Usuario-Id` a cada petición |
 | cineforo-web | **Observer** | `SesionService` con *signals* |
 | cineforo-web | **Singleton** | servicios `providedIn: 'root'` |
 
@@ -88,34 +93,28 @@ mvn archetype:generate -DarchetypeGroupId=cl.duoc.arquetipos -DarchetypeArtifact
 El proyecto generado ya trae: `Application`, `CorsConfig`, `CrudServiceBase` (Template Method),
 excepciones y `ManejadorErrores`, `application.properties` con Wallet, **Dockerfile** y `.dockerignore`.
 
-## 4. Docker en la nube (Play with Docker)
+## 4. Docker (Docker Desktop)
 
-1. Entrar a <https://labs.play-with-docker.com>, iniciar sesión con Docker Hub y pulsar **+ ADD NEW INSTANCE**.
-2. Clonar el repositorio:
-   ```bash
-   git clone https://github.com/<usuario>/cineforo.git && cd cineforo
-   ```
-3. Subir el Wallet: **arrastrar `Wallet_foros.zip` sobre la terminal** (queda en la carpeta actual) y luego:
-   ```bash
-   unzip Wallet_foros.zip -d wallet && rm Wallet_foros.zip
-   ```
-4. Crear el archivo `.env` (no se sube a Git):
-   ```bash
-   cp .env.example .env && vi .env      # DB_PASSWORD y DOCKERHUB_USER
-   ```
-5. Construir y levantar los 4 contenedores:
-   ```bash
-   docker compose up -d --build
-   docker compose ps
-   docker compose logs -f moderacion-ms   # Ctrl+C para salir
-   ```
-6. Arriba de la terminal aparecen los puertos **4200, 8081, 8082 y 8083** como enlaces: cada uno abre la URL
-   pública (`http://ipXXX-...-8081.direct.labs.play-with-docker.com`). Esas URLs se usan en Postman
-   (variables `usuariosUrl`, `foroUrl`, `moderacionUrl`) y el puerto 4200 abre el FrontEnd.
-7. (Opcional) Publicar las imágenes en Docker Hub como registro de contenedores:
-   ```bash
-   docker login && docker compose push
-   ```
+Requisitos en la carpeta `cineforo`: el Wallet descomprimido en `wallet/` y un archivo `.env`
+(copiar `.env.example`) con `DB_PASSWORD` y `DOCKERHUB_USER`.
+
+```bash
+docker compose up -d --build     # construye y levanta los 4 contenedores
+docker compose ps                # estado
+docker compose logs -f foro-ms   # logs de un servicio (Ctrl+C para salir)
+docker compose push              # publica las imágenes en Docker Hub
+docker compose down              # detiene todo
+```
+
+| Contenedor | URL |
+|---|---|
+| cineforo-web (Angular + nginx) | http://localhost:4200 |
+| usuarios-ms | http://localhost:8081/api/roles |
+| foro-ms | http://localhost:8082/api/categorias |
+| moderacion-ms | http://localhost:8083/api/sanciones |
+
+Imágenes publicadas en Docker Hub: `ludwiglindermann/cineforo-usuarios-ms`, `cineforo-foro-ms`,
+`cineforo-moderacion-ms` y `cineforo-web`.
 
 > Seguridad: `wallet/`, `db-local.properties` y `.env` están en `.gitignore` y **nunca** se suben ni se muestran en el video.
 

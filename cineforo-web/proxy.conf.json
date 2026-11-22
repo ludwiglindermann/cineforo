@@ -1,0 +1,9 @@
+{
+  "/api/auth": { "target": "http://localhost:8081", "secure": false },
+  "/api/usuarios": { "target": "http://localhost:8081", "secure": false },
+  "/api/roles": { "target": "http://localhost:8081", "secure": false },
+  "/api/categorias": { "target": "http://localhost:8082", "secure": false },
+  "/api/temas": { "target": "http://localhost:8082", "secure": false },
+  "/api/comentarios": { "target": "http://localhost:8082", "secure": false },
+  "/api/sanciones": { "target": "http://localhost:8083", "secure": false }
+}

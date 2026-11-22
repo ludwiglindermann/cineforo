@@ -63,12 +63,12 @@ export class Login {
     password: ['', [Validators.required, Validators.maxLength(20)]],
   });
 
-  enviar(): void {
+  async enviar(): Promise<void> {
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       return;
     }
-    const r = this.foro.iniciarSesion(this.form.controls.usuario.value, this.form.controls.password.value);
+    const r = await this.foro.iniciarSesion(this.form.controls.usuario.value, this.form.controls.password.value);
     if (!r.ok) {
       this.error.set(r.mensaje);
       return;

@@ -1,14 +1,16 @@
 # CineForo Web (FrontEnd en Angular)
 
 FrontEnd de CineForo: **Angular 22 + Bootstrap 5 + Bootstrap Icons**.
-Funciona por separado del BackEnd: la información se maneja con **arreglos (listas) de Angular**
-dentro de servicios, respaldados en `localStorage`.
+Se comunica con los 3 microservicios (usuarios-ms, foro-ms, moderacion-ms) mediante `HttpClient`.
+Las respuestas se guardan en **arreglos (listas) de Angular** dentro de signals, respaldados en `localStorage`.
+Si los microservicios no responden, la app sigue funcionando en **modo local** con esos arreglos
+(el pie de página indica el modo).
 
 ## Ejecutar
 
 ```bash
 npm install
-npm start          # http://localhost:4200
+npm start          # http://localhost:4200  (proxy.conf.json reenvía /api a los puertos 8081-8083)
 ```
 
 Usuarios de ejemplo (clave `Cine2026!`): `admin_cineforo` (ADMINISTRADOR), `ana_moderadora` (MODERADOR),
@@ -36,6 +38,7 @@ Usuarios de ejemplo (clave `Cine2026!`): `admin_cineforo` (ADMINISTRADOR), `ana_
 | **Facade** | `servicios/foro-facade.service.ts`: única puerta de entrada de las páginas; oculta almacenamiento y sesión y concentra las reglas por rol |
 | **Observer** | `servicios/sesion.service.ts`: la sesión es un *signal*; barra, guards y páginas reaccionan solas al iniciar o cerrar sesión |
 | **Singleton** | Servicios `providedIn: 'root'` (una sola instancia para toda la app) |
+| **Chain of Responsibility** | `interceptores/usuario.interceptor.ts`: cada petición HTTP pasa por el interceptor, que agrega `X-Usuario-Id` |
 
 ## Validaciones
 
@@ -57,5 +60,5 @@ Usuarios de ejemplo (clave `Cine2026!`): `admin_cineforo` (ADMINISTRADOR), `ana_
 
 ```bash
 docker build -t cineforo-web .
-docker run -p 4200:80 cineforo-web
+docker compose up -d cineforo-web   # nginx sirve Angular y reenvía /api a los microservicios
 ```

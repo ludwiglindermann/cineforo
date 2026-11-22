@@ -61,7 +61,12 @@ services:
 
   cineforo-web:
     build: ./cineforo-web
-    image: ${DOCKERHUB_USER:-cineforo}/cineforo-web:1.0.0
+    image: ${DOCKERHUB_USER:-cineforo}/cineforo-web:1.1.0
     ports:
       - "4200:80"
+    # nginx reenvia /api/... a los microservicios por la red interna de Docker
+    depends_on:
+      - usuarios-ms
+      - foro-ms
+      - moderacion-ms
     restart: unless-stopped
