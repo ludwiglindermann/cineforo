@@ -9,7 +9,7 @@ cineforo/
 ├── usuarios-ms/        Microservicio de usuarios, roles y login      → puerto 8081
 ├── foro-ms/            Microservicio de categorías, temas y comentarios → puerto 8082
 ├── moderacion-ms/      Microservicio de sanciones (banear/restaurar) → puerto 8083
-├── cineforo-web/       FrontEnd Angular 22 + Bootstrap 5             → puerto 80 (Docker) / 4200 (local)
+├── cineforo-web/       FrontEnd Angular 22 + Bootstrap 5             → puerto 4200 (local y Docker)
 ├── scripts/            Scripts SQL para Oracle Cloud (Autonomous Database)
 ├── postman/            Colección Postman con 54 peticiones
 ├── docker-compose.yml  Levanta los 4 contenedores
@@ -20,7 +20,7 @@ cineforo/
 
 ```
                    ┌────────────────────┐
-  Navegador ─────► │ cineforo-web (80)  │  Angular: datos en arreglos + localStorage
+  Navegador ─────► │ cineforo-web (4200)│  Angular: datos en arreglos + localStorage
                    └────────────────────┘
   Postman ──┬────► usuarios-ms (8081) ───────────────┐
             ├────► foro-ms (8082) ──► usuarios-ms     ├──► Oracle Cloud ADB (Wallet)
@@ -109,9 +109,9 @@ excepciones y `ManejadorErrores`, `application.properties` con Wallet, **Dockerf
    docker compose ps
    docker compose logs -f moderacion-ms   # Ctrl+C para salir
    ```
-6. Arriba de la terminal aparecen los puertos **80, 8081, 8082 y 8083** como enlaces: cada uno abre la URL
+6. Arriba de la terminal aparecen los puertos **4200, 8081, 8082 y 8083** como enlaces: cada uno abre la URL
    pública (`http://ipXXX-...-8081.direct.labs.play-with-docker.com`). Esas URLs se usan en Postman
-   (variables `usuariosUrl`, `foroUrl`, `moderacionUrl`) y el puerto 80 abre el FrontEnd.
+   (variables `usuariosUrl`, `foroUrl`, `moderacionUrl`) y el puerto 4200 abre el FrontEnd.
 7. (Opcional) Publicar las imágenes en Docker Hub como registro de contenedores:
    ```bash
    docker login && docker compose push

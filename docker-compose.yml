@@ -63,5 +63,5 @@ services:
     build: ./cineforo-web
     image: ${DOCKERHUB_USER:-cineforo}/cineforo-web:1.0.0
     ports:
-      - "80:80"
+      - "4200:80"
     restart: unless-stopped

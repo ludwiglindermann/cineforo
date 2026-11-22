@@ -57,5 +57,5 @@ Usuarios de ejemplo (clave `Cine2026!`): `admin_cineforo` (ADMINISTRADOR), `ana_
 
 ```bash
 docker build -t cineforo-web .
-docker run -p 80:80 cineforo-web
+docker run -p 4200:80 cineforo-web
 ```
